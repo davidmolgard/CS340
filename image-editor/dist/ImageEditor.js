@@ -46,6 +46,17 @@ if (!['grayscale', 'invert', 'emboss', 'motionblur'].includes(filter)) {
     console.error('Invalid filter. Must be one of: grayscale, invert, emboss, motionblur');
     process.exit(1);
 }
+if (filter === 'motionblur') {
+    if (args.length < 4) {
+        console.error('Usage: node ImageEditor.js <input_file> <output_file> motionblur <strength>');
+        process.exit(1);
+    }
+    const blur = parseInt(args[3]);
+    if (isNaN(blur) || blur < 1) {
+        console.error('Invalid blur strength. Must be a positive integer.');
+        process.exit(1);
+    }
+}
 class PPM {
     width;
     height;
@@ -89,9 +100,39 @@ function parsePPM(filePath) {
     }
     return new PPM(width, height, maxColor, pixels);
 }
+function grayscale(ppm) {
+    return;
+}
+function invert(ppm) {
+    for (let i = 0; i < ppm.pixels.length; i++) {
+        for (let j = 0; j < 3; j++) {
+            ppm.pixels[i][j] = Math.abs(255 - ppm.pixels[i][j]);
+        }
+    }
+}
+function emboss(ppm) {
+    return;
+}
+function motionBlur(ppm, blur) {
+    return;
+}
 try {
-    const inputPPM = parsePPM(inputFilePath);
-    inputPPM.writeToFile(outputFilePath);
+    const ppm = parsePPM(inputFilePath);
+    switch (filter) {
+        case "grayscale":
+            grayscale(ppm);
+            break;
+        case "invert":
+            invert(ppm);
+            break;
+        case "emboss":
+            emboss(ppm);
+            break;
+        case "motionblur":
+            motionBlur(ppm, parseInt(args[3]));
+            break;
+    }
+    ppm.writeToFile(outputFilePath);
 }
 catch (error) {
     console.error(error);
