@@ -101,7 +101,12 @@ function parsePPM(filePath) {
     return new PPM(width, height, maxColor, pixels);
 }
 function grayscale(ppm) {
-    return;
+    for (let i = 0; i < ppm.pixels.length; i++) {
+        const avg = Math.floor((ppm.pixels[i][0] + ppm.pixels[i][1] + ppm.pixels[i][2]) / 3);
+        ppm.pixels[i][0] = avg;
+        ppm.pixels[i][1] = avg;
+        ppm.pixels[i][2] = avg;
+    }
 }
 function invert(ppm) {
     for (let i = 0; i < ppm.pixels.length; i++) {
@@ -111,10 +116,67 @@ function invert(ppm) {
     }
 }
 function emboss(ppm) {
-    return;
+    const { width, height, pixels } = ppm;
+    const newPixels = [];
+    for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+            if (i - 1 < 0 || j - 1 < 0) {
+                newPixels.push([128, 128, 128]);
+                continue;
+            }
+            const currPixel = pixels[i * width + j];
+            const upLeftPixel = pixels[(i - 1) * width + (j - 1)];
+            const redDiff = currPixel[0] - upLeftPixel[0];
+            const greenDiff = currPixel[1] - upLeftPixel[1];
+            const blueDiff = currPixel[2] - upLeftPixel[2];
+            let maxDiff = redDiff;
+            if (Math.abs(greenDiff) > Math.abs(maxDiff)) {
+                maxDiff = greenDiff;
+            }
+            if (Math.abs(blueDiff) > Math.abs(maxDiff)) {
+                maxDiff = blueDiff;
+            }
+            let v = 128 + maxDiff;
+            if (v < 0) {
+                v = 0;
+            }
+            else if (v > 255) {
+                v = 255;
+            }
+            newPixels.push([v, v, v]);
+        }
+    }
+    ppm.pixels = newPixels;
 }
 function motionBlur(ppm, blur) {
-    return;
+    const { width, height, pixels } = ppm;
+    const newPixels = [];
+    for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+            let redSum = 0;
+            let greenSum = 0;
+            let blueSum = 0;
+            let numPixels = 0;
+            for (let k = 0; k < blur; k++) {
+                const currColumn = j + k;
+                if (currColumn < width) {
+                    const pixel = pixels[i * width + currColumn];
+                    redSum += pixel[0];
+                    greenSum += pixel[1];
+                    blueSum += pixel[2];
+                    numPixels++;
+                }
+                else {
+                    break;
+                }
+            }
+            const redAvg = Math.floor(redSum / numPixels);
+            const greenAvg = Math.floor(greenSum / numPixels);
+            const blueAvg = Math.floor(blueSum / numPixels);
+            newPixels.push([redAvg, greenAvg, blueAvg]);
+        }
+    }
+    ppm.pixels = newPixels;
 }
 try {
     const ppm = parsePPM(inputFilePath);
